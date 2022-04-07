@@ -1,0 +1,17 @@
+#+title: cloud2ads
+
+* Development mode
+#+begin_src bash
+npm install
+npx shadow-cljs watch app
+#+end_src
+
+start a ClojureScript REPL
+#+begin_src bash
+npx shadow-cljs browser-repl
+#+end_src
+
+* Building for production
+#+begin_src bash
+npx shadow-cljs release app
+#+end_src
