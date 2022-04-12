@@ -12,15 +12,14 @@
 (def url-params
   (into {}
     (map
-(if
       (fn [[k v]] [(keyword k) v])
       (map
         #(str/split % #"=")
         (str/split (str/join "" (drop 1 url-hash)) #"&")))))
+(when
   (= (get url-params :state) "google_success")
-  (do
-    (js/localStorage.setItem "google_access_token" (get url-params :access_token)) ;; store access token
-    (js/window.history.replaceState {} (. js/document -title) "/"))) ;; clean URL
+  (js/localStorage.setItem "google_access_token" (get url-params :access_token)) ;; store access token
+  (js/window.history.replaceState {} (. js/document -title) "/")) ;; clean URL
 
 ;; Google Login
 (defn google-login [] [:div [:a {:href google-login-url} "Log in with Google"]])
