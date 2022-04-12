@@ -30,19 +30,25 @@
   #js {"headers"
     #js {"Accept" "application/json"
          "Authorization" (str "Bearer " (js/localStorage.getItem "google_access_token"))}})
+
+;; Google Drive file picker
+(def file-list (r/atom '()))
 (->
   (.fetch js/window gdrive-url gdrive-headers)
   (.then #(.json %))
-  (.then #(js/console.log %)))
-
-;; Google Drive file picker
-;; (defn )
+  (.then #(js->clj %))
+  (.then #(get % "files"))
+  (.then #(reset! file-list %))
+  ;; (.then #(clj->js %))
+  ;; (.then #(js/console.log %))
+)
+(defn file-picker [] [:div (map (fn [file] [:div (get file "name")]) @file-list)])
 
 ;; Template
 (defn home-page []
   [:div.m-5
     [:div [:h2.text-2xl.text-center.font-bold "Welcome to cloud2ads"]]
-    (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div "Logged in via Google!!!"])
+    (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div [:div "Logged in via Google!!!"] [file-picker]])
     [:div "Log in via Facebook"]
     [:div#about.text-center.mt-48 "Created by D."]
    ])
