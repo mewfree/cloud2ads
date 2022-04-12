@@ -11,6 +11,8 @@ start a ClojureScript REPL
 npx shadow-cljs browser-repl
 #+end_src
 
+or using Emacs CIDER: https://docs.cider.mx/cider/cljs/shadow-cljs.html#starting-a-shadow-cljs-repl
+
 * Building for production
 #+begin_src bash
 npx shadow-cljs release app
