@@ -1,8 +1,8 @@
 (ns cloud2ads.core
-    (:require
-      [clojure.string :as str]
-      [reagent.core :as r]
-      [reagent.dom :as d]))
+  (:require
+     [clojure.string :as str]
+     [reagent.core :as r]
+     [reagent.dom :as d]))
 
 ;; Google OAuth
 (def google-login-url "https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/drive.readonly&include_granted_scopes=true&response_type=token&state=google_success&redirect_uri=http%3A//localhost:3000&client_id=127351764865-s0s6ivmt8aec5omp6rk84piuamuk1vkv.apps.googleusercontent.com")
@@ -12,11 +12,11 @@
 (def url-params
   (into {}
     (map
-     (fn [[k v]] [(keyword k) v])
-     (map
-      #(str/split % #"=")
-      (str/split (str/join "" (drop 1 url-hash)) #"&")))))
 (if
+      (fn [[k v]] [(keyword k) v])
+      (map
+        #(str/split % #"=")
+        (str/split (str/join "" (drop 1 url-hash)) #"&")))))
   (= (get url-params :state) "google_success")
   (do
     (js/localStorage.setItem "google_access_token" (get url-params :access_token)) ;; store access token
