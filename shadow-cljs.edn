@@ -7,7 +7,8 @@
                       :output-dir "public/js"
                       :asset-path "/js"
                       :modules    {:app {:entries [cloud2ads.core]}}
-                      :devtools   {:after-load cloud2ads.core/mount-root}}}
+                      :devtools   {:after-load cloud2ads.core/mount-root
+                                   :repl-init-ns cloud2ads.core}}}
 
  :dev-http     {3000 {:root    "public"
                       :handler user/app}}}
