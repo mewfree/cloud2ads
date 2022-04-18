@@ -25,24 +25,42 @@
 (defn google-login [] [:div [:a {:href google-login-url} "Log in with Google"]])
 
 ;; Google Drive API
-(def gdrive-url "https://www.googleapis.com/drive/v3/files")
+(defn gdrive-url [query] (str "https://www.googleapis.com/drive/v3/files?q=mimeType+contains+%27image%27+and+name+contains+%27" query "%27"))
 (def gdrive-headers
   #js {"headers"
     #js {"Accept" "application/json"
          "Authorization" (str "Bearer " (js/localStorage.getItem "google_access_token"))}})
 
 ;; Google Drive file picker
-(def file-list (r/atom '()))
-(->
-  (.fetch js/window gdrive-url gdrive-headers)
-  (.then #(.json %))
-  (.then #(js->clj %))
-  (.then #(get % "files"))
-  (.then #(reset! file-list %))
-  ;; (.then #(clj->js %))
-  ;; (.then #(js/console.log %))
-)
-(defn file-picker [] [:div (map (fn [file] [:div (get file "name")]) @file-list)])
+(defn update-files [query files]
+  (->
+    (.fetch js/window (gdrive-url @query) gdrive-headers)
+    (.then #(.json %))
+    (.then #(js->clj %))
+    (.then #(get % "files"))
+    (.then #(reset! files %))
+  ))
+
+;; Search bar
+(defn search-input [query files]
+  [:input.border.w-full.p-1 {:type "text"
+           :value @query
+           :on-change #(do (reset! query (-> % .-target .-value)) (update-files query files))}])
+
+(defn file-list [files]
+  (if (empty? @files)
+    [:div "No files found"]
+    [:div (map (fn [file] [:div [:input.mr-2 {:type "checkbox"}] (get file "name")]) @files)]))
+
+;; File picker
+(defn file-picker []
+  (let [search-query (r/atom "") files (r/atom '())]
+    (fn []
+      [:div
+        [:div (search-input search-query files)]
+        [:div (file-list files)]
+      ]
+    )))
 
 ;; Template
 (defn home-page []
