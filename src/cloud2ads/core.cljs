@@ -27,7 +27,7 @@
   [:div [:a {:href google-login-url} "Log in with Google"]])
 
 ;; Google Drive API
-(defn gdrive-url [query] (str "https://www.googleapis.com/drive/v3/files?q=mimeType+contains+%27image%27+and+name+contains+%27" query "%27"))
+(defn gdrive-url [query] (str "https://www.googleapis.com/drive/v3/files?q=%28mimeType+contains+%27image%27+or+mimeType+%3D+%27application%2Fvnd.google-apps.folder%27%29+and+name+contains+%27" query "%27"))
 (def gdrive-headers
   #js {"headers"
        #js {"Accept" "application/json"
@@ -52,7 +52,7 @@
 (defn file-list [files]
   (if (empty? @files)
     [:div "No files found"]
-    [:div (map (fn [file] [:div [:input.mr-2 {:type "checkbox"}] (get file "name")]) @files)]))
+    [:div (map (fn [file] [:div [:input.mr-2 {:type "checkbox"}] (str (if (= (get file "mimeType") "application/vnd.google-apps.folder") "📂 " "🖼 ") (get file "name"))]) @files)]))
 
 ;; File picker
 (defn file-picker []
