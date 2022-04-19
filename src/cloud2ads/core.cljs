@@ -39,6 +39,7 @@
    (.fetch js/window (gdrive-url @query) gdrive-headers)
    (.then #(.json %))
    (.then #(js->clj %))
+   (.then #(if (= (get-in % ["error" "code"]) 401) (set! (.-location js/window) google-login-url) %)) ;; if token expired, redirect to Google's prompt
    (.then #(get % "files"))
    (.then #(reset! files %))))
 
