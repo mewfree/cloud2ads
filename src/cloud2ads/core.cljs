@@ -19,8 +19,8 @@
           (str/split (str/join "" (drop 1 url-hash)) #"&")))))
 (when
  (= (get url-params :state) "google_success")
-  (js/localStorage.setItem "google_access_token" (get url-params :access_token)) ;; store access token
-  (js/window.history.replaceState {} (. js/document -title) "/")) ;; clean URL
+  (js/localStorage.setItem "google_access_token" (get url-params :access_token)) ; store access token
+  (js/window.history.replaceState {} (. js/document -title) "/")) ; clean URL
 
 ;; Google Login
 (defn google-login []
@@ -39,7 +39,7 @@
    (.fetch js/window (gdrive-url @query) gdrive-headers)
    (.then #(.json %))
    (.then #(js->clj %))
-   (.then #(if (= (get-in % ["error" "code"]) 401) (set! (.-location js/window) google-login-url) %)) ;; if token expired, redirect to Google's prompt
+   (.then #(if (= (get-in % ["error" "code"]) 401) (set! (.-location js/window) google-login-url) %)) ; if token expired, redirect to Google's prompt
    (.then #(get % "files"))
    (.then #(reset! files %))))
 
