@@ -77,7 +77,7 @@
   [:div
    (if (str/blank? @selected-folder)
      [:div "No folder selected"]
-     [:div [:a.hover:underline.cursor-pointer {:on-click #(do (reset! selected-folder nil) (reset! files '()))} "↩️ Go back"] [:div "Folder " [:span.font-bold (get @selected-folder "name")] " selected"]])
+     [:div [:a.hover:underline.cursor-pointer {:on-click #(do (reset! selected-folder nil) (reset! files '()) (init-get-files))} "↩️ Go back"] [:div "Folder " [:span.font-bold (get @selected-folder "name")] " selected"]])
    (if (empty? @files)
      [:div "No files found"]
      [:div
