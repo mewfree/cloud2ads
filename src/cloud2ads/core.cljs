@@ -2,7 +2,8 @@
   (:require
    [clojure.string :as str]
    [reagent.core :as r]
-   [reagent.dom :as d]))
+   [reagent.dom :as d]
+   [goog.functions]))
 
 ;; State
 (defonce files (r/atom '()))
@@ -66,11 +67,13 @@
    (.then #(get % "files"))
    (.then #(reset! files %))))
 
+(def debounced-update-files-query (goog.functions.debounce update-files-query 600))
+
 ;; Search bar
 (defn search-input [query selected-folder]
   [:input.border.w-full.p-1 {:type "text"
                              :value @query
-                             :on-change #(do (reset! query (-> % .-target .-value)) (reset! selected-folder nil) (update-files-query query))}])
+                             :on-change #(do (reset! query (-> % .-target .-value)) (reset! selected-folder nil) (debounced-update-files-query query))}])
 
 ;; File list
 (defn file-list [query selected-folder]
