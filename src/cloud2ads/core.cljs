@@ -7,6 +7,7 @@
 
 ;; State
 (defonce files (r/atom '()))
+(defonce selected-files (r/atom '()))
 
 ;; Google OAuth
 (def google-login-url
@@ -73,26 +74,35 @@
 (defn search-input [query selected-folder]
   [:input.border.w-full.p-1 {:type "text"
                              :value @query
-                             :on-change #(do (reset! query (-> % .-target .-value)) (reset! selected-folder nil) (debounced-update-files-query query))}])
+                             :on-change #(do (reset! query (-> % .-target .-value)) (reset! selected-folder nil) (reset! selected-files '()) (debounced-update-files-query query))}])
 
 ;; File list
 (defn file-list [query selected-folder]
   [:div
    (if (str/blank? @selected-folder)
      [:div "No folder selected"]
-     [:div [:a.hover:underline.cursor-pointer {:on-click #(do (reset! selected-folder nil) (reset! files '()) (init-get-files))} "↩️ Go back"] [:div "Folder " [:span.font-bold (get @selected-folder "name")] " selected"]])
+     [:div [:a.hover:underline.cursor-pointer {:on-click #(do (reset! selected-folder nil) (reset! files '()) (reset! selected-files '()) (init-get-files))} "↩️ Go back"] [:div "Folder " [:span.font-bold (get @selected-folder "name")] " selected"]])
    (if (empty? @files)
      [:div "No files found"]
      [:div
-      (map
-       (fn [file]
-         (def folder? (= (get file "mimeType") "application/vnd.google-apps.folder"))
-         [:div
-          [:input.mr-2 {:type "checkbox", :disabled folder?}]
-          (if folder?
-            [:a.hover:underline.cursor-pointer {:on-click #(do (reset! query "") (reset! selected-folder file) (reset! files '()) (update-files-folder (get @selected-folder "id")))} (str "📂 " (get file "name"))]
-            (str "🖼 " (get file "name")))])
-       @files)])])
+      [:input.mr-2 {:id "select-all" :type "checkbox" :checked (= @selected-files sort @files)}] [:label {:for "select-all"} "Select all"]
+      (doall
+       (map
+        (fn [file]
+          (def folder? (= (get file "mimeType") "application/vnd.google-apps.folder"))
+          [:div {:key (get file "id")}
+           [:input.mr-2 {:id (get file "id")
+                         :type "checkbox"
+                         :disabled folder?
+                         :on-change (fn []
+                                      (if (some #(= file %) @selected-files)
+                                        (reset! selected-files (remove #(= file %) @selected-files))
+                                        (reset! selected-files (cons file @selected-files))))
+                         :checked (some? (some #(= file %) @selected-files))}]
+           (if folder?
+             [:a.hover:underline.cursor-pointer {:on-click #(do (reset! query "") (reset! selected-folder file) (reset! files '()) (reset! selected-files '()) (update-files-folder (get @selected-folder "id")))} (str "📂 " (get file "name"))]
+             [:label {:for (get file "id")} (str "🖼 " (get file "name"))])])
+        @files))])])
 
 ;; File picker
 (defn file-picker []
@@ -100,7 +110,8 @@
     (fn []
       [:div
        [:div (search-input search-query selected-folder)]
-       [:div (file-list search-query selected-folder)]])))
+       [:div (file-list search-query selected-folder)]
+       [:div (str "Selected: " (str/join ", " (map #(get % "name") @selected-files)))]]))) ;; convert to thread-last?
 
 ;; Template
 (defn home-page []
