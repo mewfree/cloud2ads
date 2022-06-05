@@ -15,7 +15,7 @@
 
 ;; Handling OAuth redirects
 (def url-hash (. js/window -location.hash))
-(def url-params
+(def url-hash-map
   (into {}
         (map
          (fn [[k v]] [(keyword k) v])
@@ -23,8 +23,8 @@
           #(str/split % #"=")
           (str/split (str/join "" (drop 1 url-hash)) #"&")))))
 (when
- (= (get url-params :state) "google_success")
-  (js/localStorage.setItem "google_access_token" (get url-params :access_token)) ; store access token
+ (= (get url-hash-map :state) "google_success")
+  (js/localStorage.setItem "google_access_token" (get url-hash-map :access_token)) ; store access token
   (js/window.history.replaceState {} (. js/document -title) "/")) ; clean URL
 
 ;; Google Login
@@ -118,12 +118,32 @@
        [:div (file-list search-query selected-folder)]
        [:div (str "Selected: " (str/join ", " (map #(get % "name") @selected-files)))]]))) ;; convert to thread-last?
 
+;; Facebook auth
+(def facebook-login-url
+  (str/join ""
+            '("https://www.facebook.com/v14.0/dialog/oauth?"
+              "client_id=" "327707909531390"
+              "&redirect_uri=" "http%3A//localhost:3000"
+              "&response_type=" "token"
+              ;; "&scope=" "ads_management"
+              "&state=" "facebook_success")))
+(println facebook-login-url)
+
+(when
+ (= (get url-hash-map :state) "facebook_success")
+  (js/localStorage.setItem "facebook_access_token" (get url-hash-map :access_token)) ; store access token
+  (js/window.history.replaceState {} (. js/document -title) "/")) ; clean URL
+
+;; Facebook login
+(defn facebook-login []
+  [:div [:a {:href facebook-login-url} "Log in via Facebook"]])
+
 ;; Template
 (defn home-page []
   [:div.m-5
    [:div [:h2.text-2xl.text-center.font-bold "Welcome to cloud2ads"]]
    (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div [:div "Logged in via Google 🔗"] [file-picker]])
-   [:div.mt-24 "Log in via Facebook"]
+   (if (nil? (js/localStorage.getItem "facebook_access_token")) [facebook-login] [:div [:div "Logged in via Facebook 🔗"] [:div "Account selector"]])
    [:div#about.text-center.mt-48 "Created by D."]])
 
 ;; Initialize app
