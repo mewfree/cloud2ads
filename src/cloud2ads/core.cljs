@@ -85,7 +85,12 @@
    (if (empty? @files)
      [:div "No files found"]
      [:div
-      [:input.mr-2 {:id "select-all" :type "checkbox" :checked (= @selected-files sort @files)}] [:label {:for "select-all"} "Select all"]
+      (def all-selected? (= (sort-by #(get % "id") @selected-files) (sort-by #(get % "id") @files)))
+      [:input.mr-2 {:id "select-all"
+                    :type "checkbox"
+                    :on-change #(if-not all-selected? (reset! selected-files @files) (reset! selected-files '()))
+                    :checked all-selected?}]
+      [:label {:for "select-all"} (if-not all-selected? "Select all" "Unselect all")]
       (doall
        (map
         (fn [file]
