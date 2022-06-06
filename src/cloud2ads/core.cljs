@@ -8,6 +8,7 @@
 ;; State
 (defonce files (r/atom '()))
 (defonce selected-files (r/atom '()))
+(defonce facebook-ad-accounts (r/atom {}))
 
 ;; Google OAuth
 (def google-login-url
@@ -136,6 +137,32 @@
 ;; Facebook login
 (defn facebook-login []
   [:div [:a {:href facebook-login-url} "Log in via Facebook"]])
+
+(defn facebook-api [endpoint]
+  (str "https://graph.facebook.com/v14.0" endpoint (if (str/includes? endpoint "?") "&" "?") "access_token=" (js/localStorage.getItem "facebook_access_token")))
+
+(defn act_valid? [act] (= (get act "account_status") 1))
+
+;; Listing accounts
+(defn init-facebook-list-accounts []
+  (->
+   (.fetch js/window (facebook-api (str "/me?fields=" (js/encodeURIComponent "name,personal_ad_accounts{name,account_status},businesses{name,client_ad_accounts{name,business_name,account_status},owned_ad_accounts{name,business_name,account_status}}"))))
+   (.then #(.json %))
+   (.then #(js->clj %))
+   (.then #(hash-map "personal"
+                     (filter act_valid? (get-in % ["personal_ad_accounts" "data"]))
+                     "businesses"
+                     (map
+                      (fn [business]
+                        {"name" (get business "name")
+                         "id" (get business "id")
+                         "ad_accounts" (concat
+                                        (filter act_valid? (get-in business ["client_ad_accounts" "data"] '()))
+                                        (filter act_valid? (get-in business ["owned_ad_accounts" "data"] '())))})
+                      (get-in % ["businesses" "data"]))))
+   (.then #(reset! facebook-ad-accounts %))))
+
+(init-facebook-list-accounts)
 
 ;; Template
 (defn home-page []
