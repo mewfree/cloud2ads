@@ -115,9 +115,11 @@
   (let [search-query (r/atom "") selected-folder (r/atom nil)]
     (fn []
       [:div
+       [:h1.text-xl.font-bold "Google Drive files"]
        [:div (search-input search-query selected-folder)]
        [:div (file-list search-query selected-folder)]
-       [:div (str "Selected: " (str/join ", " (map #(get % "name") @selected-files)))]]))) ;; convert to thread-last?
+       [:div "Selected:"]
+       [:ul (map (fn [file] [:li (get file "name")]) @selected-files)]])))
 
 ;; Facebook auth
 (def facebook-login-url
@@ -162,20 +164,37 @@
                       (get-in % ["businesses" "data"]))))
    (.then #(reset! facebook-ad-accounts %))))
 
-(init-facebook-list-accounts)
+(defn facebook-account-selector []
+  [:div
+   [:h1.text-xl.font-bold "Facebook Accounts"]
+   [:div "Select your account"]
+   (when-not (empty? (get @facebook-ad-accounts "personal")) [:div.font-bold "Personal accounts"])
+   (map (fn [personal_account]
+          [:div.ml-2 (get personal_account "name")])
+        (get @facebook-ad-accounts "personal")) ; personal accounts
+   (map (fn [business]
+          [:div [:div.font-bold (get business "name")]
+           (when (empty? (get business "ad_accounts")) [:div.italic.ml-2 "No ad account in this business"])
+           (map (fn [ad_account]
+                  [:div.ml-2 (get ad_account "name")])
+                (get business "ad_accounts"))])
+        (get @facebook-ad-accounts "businesses"))]) ; businesses
+
 
 ;; Template
 (defn home-page []
   [:div.m-5
    [:div [:h2.text-2xl.text-center.font-bold "Welcome to cloud2ads"]]
-   (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div [:div "Logged in via Google 🔗"] [file-picker]])
-   (if (nil? (js/localStorage.getItem "facebook_access_token")) [facebook-login] [:div [:div "Logged in via Facebook 🔗"] [:div "Account selector"]])
+   [:div.flex.flex-col.md:flex-row.justify-evenly
+    [:div (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div [:div "Logged in via Google 🔗"] [file-picker]])]
+    [:div (if (nil? (js/localStorage.getItem "facebook_access_token")) [facebook-login] [:div [:div "Logged in via Facebook 🔗"] [facebook-account-selector]])]]
    [:div#about.text-center.mt-48 "Created by D."]])
 
 ;; Initialize app
 (defonce init
   (do
-    (init-get-files)))
+    (when-not (nil? (js/localStorage.getItem "google_access_token")) (init-get-files))
+    (when-not (nil? (js/localStorage.getItem "facebook_access_token")) (init-facebook-list-accounts))))
 
 ;; Mount app
 (defn mount-root []
