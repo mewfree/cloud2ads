@@ -11,7 +11,7 @@
 
 ;; Google OAuth
 (def google-login-url
-  "https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/drive.readonly&include_granted_scopes=true&response_type=token&state=google_success&redirect_uri=http%3A//localhost:3000&client_id=127351764865-s0s6ivmt8aec5omp6rk84piuamuk1vkv.apps.googleusercontent.com")
+  "https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/drive.readonly&include_granted_scopes=true&response_type=token&state=google_success&redirect_uri=https%3A//localhost:3001&client_id=127351764865-s0s6ivmt8aec5omp6rk84piuamuk1vkv.apps.googleusercontent.com")
 
 ;; Handling OAuth redirects
 (def url-hash (. js/window -location.hash))
@@ -123,11 +123,10 @@
   (str/join ""
             '("https://www.facebook.com/v14.0/dialog/oauth?"
               "client_id=" "327707909531390"
-              "&redirect_uri=" "http%3A//localhost:3000"
+              "&redirect_uri=" "https%3A//localhost:3001"
               "&response_type=" "token"
-              ;; "&scope=" "ads_management"
+              "&scope=" "ads_management,business_management"
               "&state=" "facebook_success")))
-(println facebook-login-url)
 
 (when
  (= (get url-hash-map :state) "facebook_success")
