@@ -9,6 +9,7 @@
 (defonce files (r/atom '()))
 (defonce selected-files (r/atom '()))
 (defonce facebook-ad-accounts (r/atom {}))
+(defonce selected-facebook-ad-account (r/atom ""))
 
 ;; Google OAuth
 (def google-login-url
@@ -168,6 +169,7 @@
                                                     [:input.mr-2 {:id (str business_id "_" (get account "id"))
                                                                   :type "radio"
                                                                   :name "facebook_act_id"
+                                                                  :on-change #(reset! selected-facebook-ad-account (-> % .-target .-value))
                                                                   :value (get account "id")}]
                                                     [:label {:for (str business_id "_" (get account "id"))} (get account "name")]])
 
@@ -193,6 +195,11 @@
    [:div.flex.flex-col.md:flex-row.justify-evenly
     [:div (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div [:div "Logged in via Google 🔗"] [file-picker]])]
     [:div (if (nil? (js/localStorage.getItem "facebook_access_token")) [facebook-login] [:div [:div "Logged in via Facebook 🔗"] [facebook-account-selector]])]]
+   [:div#about.text-center.mt-12
+    [:span "You will upload "]
+    [:span.font-bold (str/join ", " (map #(get % "name") @selected-files))]
+    [:span " to Facebook ad account "]
+    [:span.font-bold @selected-facebook-ad-account]]
    [:div#about.text-center.mt-48 "Created by D."]])
 
 ;; Initialize app
