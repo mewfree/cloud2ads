@@ -164,19 +164,24 @@
                       (get-in % ["businesses" "data"]))))
    (.then #(reset! facebook-ad-accounts %))))
 
+(defn facebook-account-radio [business_id account] [:div.ml-2
+                                                    [:input.mr-2 {:id (str business_id "_" (get account "id"))
+                                                                  :type "radio"
+                                                                  :name "facebook_act_id"
+                                                                  :value (get account "id")}]
+                                                    [:label {:for (str business_id "_" (get account "id"))} (get account "name")]])
+
 (defn facebook-account-selector []
   [:div
    [:h1.text-xl.font-bold "Facebook Accounts"]
    [:div "Select your account"]
    (when-not (empty? (get @facebook-ad-accounts "personal")) [:div.font-bold "Personal accounts"])
-   (map (fn [personal_account]
-          [:div.ml-2 (get personal_account "name")])
+   (map (fn [personal_account] (facebook-account-radio "personal" personal_account))
         (get @facebook-ad-accounts "personal")) ; personal accounts
    (map (fn [business]
           [:div [:div.font-bold (get business "name")]
            (when (empty? (get business "ad_accounts")) [:div.italic.ml-2 "No ad account in this business"])
-           (map (fn [ad_account]
-                  [:div.ml-2 (get ad_account "name")])
+           (map (fn [ad_account] (facebook-account-radio (get business "id") ad_account))
                 (get business "ad_accounts"))])
         (get @facebook-ad-accounts "businesses"))]) ; businesses
 
