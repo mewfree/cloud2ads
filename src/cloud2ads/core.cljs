@@ -139,8 +139,10 @@
 (defn facebook-login []
   [:div [:a {:href facebook-login-url} "Log in via Facebook"]])
 
+(def facebook-api-base-url "https://graph.facebook.com/v14.0")
+
 (defn facebook-api [endpoint]
-  (str "https://graph.facebook.com/v14.0" endpoint (if (str/includes? endpoint "?") "&" "?") "access_token=" (js/localStorage.getItem "facebook_access_token")))
+  (str facebook-api-base-url endpoint (if (str/includes? endpoint "?") "&" "?") "access_token=" (js/localStorage.getItem "facebook_access_token")))
 
 (defn act_valid? [act] (= (get act "account_status") 1))
 
@@ -193,6 +195,32 @@
       (let [business (->> (get @facebook-ad-accounts "businesses") (filter #(= business_id (get % "id"))) (first))]
         (->> (get business "ad_accounts") (filter #(= account_id (get % "id"))) (first))))))
 
+(defn gdrive-download-file [file-id] (str "https://www.googleapis.com/drive/v3/files/" file-id "?alt=media"))
+
+(defn generate-form-data [params filename]
+  (let [form-data (js/FormData.)]
+    (doseq [[k v] params]
+      (.append form-data (name k) v filename))
+    form-data))
+
+(defn process-file [file]
+  (->
+   (.fetch js/window (gdrive-download-file (file "id")) gdrive-headers)
+   (.then #(.blob %))
+   (.then
+    (fn [blob]
+      (->
+       (.fetch js/window
+               (facebook-api (str "/" (last (str/split @selected-facebook-ad-account #":")) "/adimages"))
+               #js {"method" "post"
+                    "body" (generate-form-data {"filename" blob} (file "name"))}))))))
+
+(defn upload-button []
+  [:div.text-center
+   [:button.rounded-md.text-white.bg-indigo-500.mt-2.p-2
+    {:on-click #(map (fn [file] (process-file file)) @selected-files)}
+    "DO IT"]])
+
 ;; Template
 (defn home-page []
   [:div.m-5
@@ -206,6 +234,7 @@
     [:span " to Facebook ad account "]
     [:span.font-bold (get (get-facebook-ad-account-from-id @selected-facebook-ad-account) "name")]
     [:span "'s media library"]]
+   [upload-button]
    [:div#about.text-center.mt-48 "Created by D."]])
 
 ;; Initialize app
