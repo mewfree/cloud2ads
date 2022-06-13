@@ -80,7 +80,7 @@
 
 ;; File list
 (defn file-list [query selected-folder]
-  [:div
+  [:div.overflow-auto {:class "max-h-[42rem]"}
    (if (str/blank? @selected-folder)
      [:div "No folder selected"]
      [:div [:a.hover:underline.cursor-pointer {:on-click #(do (reset! selected-folder nil) (reset! files '()) (reset! selected-files '()) (init-get-files))} "↩️ Go back"] [:div "Folder " [:span.font-bold (get @selected-folder "name")] " selected"]])
@@ -118,9 +118,7 @@
       [:div
        [:h1.text-xl.font-bold "Google Drive files"]
        [:div (search-input search-query selected-folder)]
-       [:div (file-list search-query selected-folder)]
-       [:div "Selected:"]
-       [:ul (map (fn [file] [:li (get file "name")]) @selected-files)]])))
+       [:div (file-list search-query selected-folder)]])))
 
 ;; Facebook auth
 (def facebook-login-url
@@ -166,12 +164,13 @@
    (.then #(reset! facebook-ad-accounts %))))
 
 (defn facebook-account-radio [business_id account] [:div.ml-2
-                                                    [:input.mr-2 {:id (str business_id "_" (get account "id"))
+                                                    [:input.mr-2 {:id (str business_id ":" (get account "id"))
                                                                   :type "radio"
                                                                   :name "facebook_act_id"
                                                                   :on-change #(reset! selected-facebook-ad-account (-> % .-target .-value))
-                                                                  :value (get account "id")}]
-                                                    [:label {:for (str business_id "_" (get account "id"))} (get account "name")]])
+                                                                  ;; :checked (= (get account "id") @selected-facebook-ad-account)
+                                                                  :value (str business_id ":" (get account "id"))}]
+                                                    [:label {:for (str business_id ":" (get account "id"))} (get account "name")]])
 
 (defn facebook-account-selector []
   [:div
@@ -187,6 +186,12 @@
                 (get business "ad_accounts"))])
         (get @facebook-ad-accounts "businesses"))]) ; businesses
 
+(defn get-facebook-ad-account-from-id [id]
+  (let [[business_id account_id] (str/split id #":")]
+    (case business_id
+      "personal" (->> (get @facebook-ad-accounts "personal") (filter #(= account_id (get % "id"))) (first))
+      (let [business (->> (get @facebook-ad-accounts "businesses") (filter #(= business_id (get % "id"))) (first))]
+        (->> (get business "ad_accounts") (filter #(= account_id (get % "id"))) (first))))))
 
 ;; Template
 (defn home-page []
@@ -199,7 +204,8 @@
     [:span "You will upload "]
     [:span.font-bold (str/join ", " (map #(get % "name") @selected-files))]
     [:span " to Facebook ad account "]
-    [:span.font-bold @selected-facebook-ad-account]]
+    [:span.font-bold (get (get-facebook-ad-account-from-id @selected-facebook-ad-account) "name")]
+    [:span "'s media library"]]
    [:div#about.text-center.mt-48 "Created by D."]])
 
 ;; Initialize app
