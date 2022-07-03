@@ -215,12 +215,6 @@
                #js {"method" "post"
                     "body" (generate-form-data {"filename" blob} (file "name"))}))))))
 
-(defn upload-button []
-  [:div.text-center
-   [:button.rounded-md.text-white.bg-indigo-500.mt-2.p-2
-    {:on-click #(map (fn [file] (process-file file)) @selected-files)}
-    "Upload"]])
-
 (defn upload-string []
   (cond
     (empty? @selected-files) [:div "Please select one or more files"]
@@ -234,10 +228,21 @@
      [:span "'s media library"]]
     :else [:div "oh oh..."]))
 
+(defn active-upload-button []
+  [:div.text-center
+   [:button.rounded-md.text-white.bg-indigo-500.mt-2.p-2
+    {:on-click #(map (fn [file] (process-file file)) @selected-files)}
+    "Upload"]])
+
+(defn inactive-upload-button []
+  [:div.text-center
+   [:button.rounded-md.text-white.bg-gray-500.cursor-not-allowed.mt-2.p-2
+    "Upload"]])
+
 (defn upload-module []
   [:div#about.text-center.mt-12
    [upload-string]
-   [upload-button]])
+   (if-not (or (empty? @selected-files) (empty? @selected-facebook-ad-account)) [active-upload-button] [inactive-upload-button])])
 
 ;; Template
 (defn home-page []
