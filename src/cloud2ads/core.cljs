@@ -6,6 +6,7 @@
    [goog.functions]))
 
 ;; State
+(defonce google-logged-in (r/atom (if (nil? (js/localStorage.getItem "google_access_token")) false true)))
 (defonce files (r/atom '()))
 (defonce selected-files (r/atom '()))
 (defonce facebook-ad-accounts (r/atom {}))
@@ -27,6 +28,7 @@
 (when
  (= (get url-hash-map :state) "google_success")
   (js/localStorage.setItem "google_access_token" (get url-hash-map :access_token)) ; store access token
+  (reset! google-logged-in true) ; set logged-in state to true
   (js/window.history.replaceState {} (. js/document -title) "/")) ; clean URL
 
 ;; Google Login
@@ -244,12 +246,21 @@
    [upload-string]
    (if-not (or (empty? @selected-files) (empty? @selected-facebook-ad-account)) [active-upload-button] [inactive-upload-button])])
 
+(defn google-logout []
+  [:span.cursor-pointer
+   {:on-click #(do
+                 (js/localStorage.removeItem "google_access_token")
+                 (reset! google-logged-in false)
+                 (reset! files '())
+                 (reset! selected-files '()))}
+   "Log out 🫤"])
+
 ;; Template
 (defn home-page []
   [:div.m-5
    [:div [:h2.text-2xl.text-center.font-bold "Welcome to cloud2ads"]]
    [:div.flex.flex-col.md:flex-row.justify-evenly
-    [:div (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div [:div "Logged in via Google 🔗"] [file-picker]])]
+    [:div (if-not @google-logged-in [google-login] [:div [:div [:span.mr-4 "Logged in via Google 🔗"] [google-logout]] [file-picker]])]
     [:div (if (nil? (js/localStorage.getItem "facebook_access_token")) [facebook-login] [:div [:div "Logged in via Facebook 🔗"] [facebook-account-selector]])]]
    [upload-module]
    [:div#about.text-center.mt-48 "Created by D."]])
