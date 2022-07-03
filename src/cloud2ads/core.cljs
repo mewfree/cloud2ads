@@ -219,7 +219,25 @@
   [:div.text-center
    [:button.rounded-md.text-white.bg-indigo-500.mt-2.p-2
     {:on-click #(map (fn [file] (process-file file)) @selected-files)}
-    "DO IT"]])
+    "Upload"]])
+
+(defn upload-string []
+  (cond
+    (empty? @selected-files) [:div "Please select one or more files"]
+    (empty? @selected-facebook-ad-account) [:div "Please select a Facebook ad account"]
+    (and (not-empty @selected-files) (not-empty @selected-facebook-ad-account))
+    [:div
+     [:span "You will upload "]
+     [:span.font-bold (str/join ", " (map #(get % "name") @selected-files))]
+     [:span " to Facebook ad account "]
+     [:span.font-bold (get (get-facebook-ad-account-from-id @selected-facebook-ad-account) "name")]
+     [:span "'s media library"]]
+    :else [:div "oh oh..."]))
+
+(defn upload-module []
+  [:div#about.text-center.mt-12
+   [upload-string]
+   [upload-button]])
 
 ;; Template
 (defn home-page []
@@ -228,13 +246,7 @@
    [:div.flex.flex-col.md:flex-row.justify-evenly
     [:div (if (nil? (js/localStorage.getItem "google_access_token")) [google-login] [:div [:div "Logged in via Google 🔗"] [file-picker]])]
     [:div (if (nil? (js/localStorage.getItem "facebook_access_token")) [facebook-login] [:div [:div "Logged in via Facebook 🔗"] [facebook-account-selector]])]]
-   [:div#about.text-center.mt-12
-    [:span "You will upload "]
-    [:span.font-bold (str/join ", " (map #(get % "name") @selected-files))]
-    [:span " to Facebook ad account "]
-    [:span.font-bold (get (get-facebook-ad-account-from-id @selected-facebook-ad-account) "name")]
-    [:span "'s media library"]]
-   [upload-button]
+   [upload-module]
    [:div#about.text-center.mt-48 "Created by D."]])
 
 ;; Initialize app
