@@ -34,7 +34,7 @@
 
 ;; Google Login
 (defn google-login []
-  [:div [:a {:href google-login-url} "Log in with Google"]])
+  [:div.text-center.m-4 [:a.border.rounded-md.drop-shadow.font-bold.text-lg.p-2 {:href google-login-url} "Log in with Google"]])
 
 ;; Google Drive API
 (defn gdrive-url-init [] (str "https://www.googleapis.com/drive/v3/files?q=%28mimeType+contains+%27image%27+or+mimeType+%3D+%27application%2Fvnd.google-apps.folder%27%29"))
@@ -78,6 +78,7 @@
 ;; Search bar
 (defn search-input [query selected-folder]
   [:input.border.w-full.p-1 {:type "text"
+                             :placeholder "Search"
                              :value @query
                              :on-change #(do (reset! query (-> % .-target .-value)) (reset! selected-folder nil) (reset! selected-files '()) (debounced-update-files-query query))}])
 
@@ -141,7 +142,7 @@
 
 ;; Facebook login
 (defn facebook-login []
-  [:div [:a {:href facebook-login-url} "Log in via Facebook"]])
+  [:div.text-center.m-4 [:a.rounded-md.bg-blue-600.hover:bg-blue-700.font-bold.text-white.text-lg.p-2 {:href facebook-login-url} "Log in with Facebook"]])
 
 (def facebook-api-base-url "https://graph.facebook.com/v14.0")
 
@@ -221,7 +222,7 @@
 
 (defn upload-string []
   (cond
-    (empty? @selected-files) [:div "Please select one or more files"]
+    (empty? @selected-files) [:div "Please select one or more Google Drive files"]
     (empty? @selected-facebook-ad-account) [:div "Please select a Facebook ad account"]
     (and (not-empty @selected-files) (not-empty @selected-facebook-ad-account))
     [:div
@@ -234,13 +235,13 @@
 
 (defn active-upload-button []
   [:div.text-center
-   [:button.rounded-md.text-white.bg-indigo-500.mt-2.p-2
+   [:button.rounded-md.font-bold.text-lg.text-white.bg-indigo-500.hover:bg-indigo-700.mt-2.p-2
     {:on-click #(map (fn [file] (process-file file)) @selected-files)}
     "Upload"]])
 
 (defn inactive-upload-button []
   [:div.text-center
-   [:button.rounded-md.text-white.bg-gray-500.cursor-not-allowed.mt-2.p-2
+   [:button.rounded-md.text-lg.text-white.bg-gray-500.cursor-not-allowed.mt-2.p-2
     "Upload"]])
 
 (defn upload-module []
@@ -266,15 +267,46 @@
                  (reset! selected-facebook-ad-account ""))}
    "Log out 🫤"])
 
+(defn header []
+  [:div.flex.flex-col.md:flex-row.md:justify-around.text-center.bg-gray-800.text-white.p-5.mb-6
+   [:h2.text-2xl.font-bold "cloud2ads"]
+   [:div.text-xl "About"]])
+
+(defn footer []
+  [:div#about.text-center.bg-gray-800.text-white.text-lg.py-12
+   [:span "Created by "]
+   [:a.hover:underline.cursor-pointer {:href "https://www.damiengonot.com"} "Damien Gonot"]])
+
+(defn bottom-marketing-copy []
+  [:div.flex.flex-col.md:flex-row.md:justify-evenly.space-y-2.md:space-x-4.m-4
+   [:div.rounded-md.bg-gray-300.p-5
+    [:div.text-center.text-lg.font-bold "What?"]
+    [:div "cloud2ads is a website allowing you to upload Facebook Ads creatives from Google Drive"]]
+   [:div.rounded-md.bg-gray-300.p-5
+    [:div.text-center.text-lg.font-bold "Why?"]
+    [:div "Upload ad creatives is a very tedious proces... Having to first download the specific files from Google Drive, then select them to upload Facebook and wait for the upload to finish in front of your computer is very annoying."]]
+   [:div.rounded-md.bg-gray-300.p-5
+    [:div.text-center.text-lg.font-bold "How?"]
+    [:div "Start by logging in below!"]]])
+
+(defn top-marketing-copy []
+  [:div.text-center.rounded-md.bg-blue-100.p-2.mb-6 "cloud2ads is a tool to upload Facebook Ads creatives from Google Drive."])
+
 ;; Template
 (defn home-page []
-  [:div.m-5
-   [:div [:h2.text-2xl.text-center.font-bold "Welcome to cloud2ads"]]
-   [:div.flex.flex-col.md:flex-row.justify-evenly
-    [:div (if-not @google-logged-in [google-login] [:div [:div [:span.mr-4 "Logged in via Google 🔗"] [google-logout]] [file-picker]])]
-    [:div (if-not @facebook-logged-in [facebook-login] [:div [:div [:span.mr-4 "Logged in via Facebook 🔗"] [facebook-logout]] [facebook-account-selector]])]]
-   [upload-module]
-   [:div#about.text-center.mt-48 "Created by D."]])
+  [:div.flex.flex-col.h-screen
+   [header]
+   [:div.container.mx-auto.max-w-screen-xl.flex-grow.p-2
+    [top-marketing-copy]
+    [:div.text-2xl.font-bold.text-center "Get started 👇"]
+    [:div.flex.flex-col.md:flex-row.justify-evenly
+     [:div (if-not @google-logged-in [google-login] [:div [:div [:span.mr-4 "Logged in via Google 🔗"] [google-logout]] [file-picker]])]
+     [:div (if-not @facebook-logged-in [facebook-login] [:div [:div [:span.mr-4 "Logged in via Facebook 🔗"] [facebook-logout]] [facebook-account-selector]])]]
+    [upload-module]
+    ;; [bottom-marketing-copy]
+    ;; [:div.text-center.my-8 "Frequently Asked Questions"]
+    ]
+   [footer]])
 
 ;; Initialize app
 (defonce init
